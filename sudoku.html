@@ -169,6 +169,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 0.5rem;
+      flex-wrap: wrap;
       padding: 0.75rem 1rem;
       border-bottom: 1px solid var(--hairline);
     }
@@ -183,7 +184,23 @@
     .header-tools {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
       gap: 0.5rem;
+      min-width: 0;
+    }
+
+    /* Compact header controls on narrow screens so they never overflow */
+    @media (max-width: 480px) {
+      header.site-header { padding: 0.6rem 0.75rem; gap: 0.4rem; }
+      header.site-header h1 { font-size: 1.15rem; }
+      .header-tools { gap: 0.35rem; }
+      .lang-select { padding: 0.35rem 0.4rem; font-size: 0.8rem; }
+      .icon-btn { padding: 0.35rem 0.5rem; font-size: 0.8rem; gap: 0.25rem; }
+    }
+    @media (max-width: 360px) {
+      /* Hide icon-button text labels; icons + aria-labels remain */
+      .icon-btn #sound-text, .icon-btn #theme-text { display: none; }
     }
 
     main {
@@ -209,7 +226,7 @@
     /* Board sizing: use min of viewport dims so it fits at 360x640 without scroll.
        Capped so wide screens don't exceed ~560px. */
     .board-container {
-      --board-size: min(92vw, 42vh, 540px);
+      --board-size: min(90vw, 38vh, 540px);
       width: var(--board-size);
       max-width: 100%;
     }
@@ -268,13 +285,24 @@
 
     /* Compact spacing on small screens so board + numpad fit without scrolling */
     @media (max-width: 599px) {
-      main { gap: 0.5rem; padding: 0.5rem; }
-      .play-area { gap: 0.5rem; }
-      .info-panel { padding: 0.5rem 0.75rem; }
-      .stat dd { font-size: 1rem; }
-      .progress-row { margin-top: 0.4rem; }
-      .num-btn { font-size: 1.05rem; padding: 0.4rem; }
-      .how-to-play { margin-top: 0.25rem; }
+      main { gap: 0.4rem; padding: 0.4rem; }
+      .play-area { gap: 0.4rem; }
+      .info-panel { padding: 0.4rem 0.6rem; }
+      .stats { gap: 0.25rem 0.6rem; }
+      .stat dd { font-size: 0.95rem; }
+      .stat dt { font-size: 0.62rem; }
+      .progress-row { margin-top: 0.35rem; }
+      .controls { gap: 0.4rem; }
+      .controls .action-btn { padding: 0.45rem 0.4rem; }
+      .numpad { gap: 0.4rem; }
+      .num-btn { font-size: 1.05rem; padding: 0.35rem; }
+      .how-to-play { margin-top: 0.2rem; }
+    }
+
+    /* On short viewports the header may wrap to two rows (title + tools);
+       shrink the board a little more so the board + numpad still fit. */
+    @media (max-width: 599px) and (max-height: 700px) {
+      .board-container { --board-size: min(90vw, 33vh, 540px); }
     }
 
     /* ============================================================
@@ -433,6 +461,56 @@
       color: var(--text-secondary);
     }
 
+    /* ---- Maya (dot-and-bar) numerals: drawn in CSS, font-independent ----
+       A numeral stacks a row of dots (1-4) above a stack of bars (each = 5). */
+    .maya-num {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8%;
+      width: 1em;
+      height: 1.1em;
+      vertical-align: middle;
+    }
+    .maya-dots {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 12%;
+      height: 0.3em;
+    }
+    .maya-dot {
+      width: 0.17em;
+      height: 0.17em;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .maya-bars {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.08em;
+    }
+    .maya-bar {
+      width: 0.7em;
+      height: 0.11em;
+      border-radius: 0.06em;
+      background: currentColor;
+    }
+    /* Smaller Maya numerals inside pencil-mark notes */
+    .note .maya-num { height: 1em; }
+    .note .maya-dot { width: 0.16em; height: 0.16em; }
+    .note .maya-bar { width: 0.62em; height: 0.1em; }
+
+    .num-face {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 1.2em;
+    }
+
     /* ============================================================
        Buttons / numpad
        ============================================================ */
@@ -525,6 +603,24 @@
     }
     .icon-btn:hover { background: var(--surface-2); }
 
+    .lang-select {
+      min-height: 44px;
+      font: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.4rem 0.5rem;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+    }
+    .lang-select:focus-visible {
+      outline: var(--focus-ring-width) solid var(--accent-strong);
+      outline-offset: 2px;
+    }
+
     /* How to play */
     .how-to-play {
       width: 100%;
@@ -606,6 +702,10 @@
     <header class="site-header">
       <h1>Sudoku</h1>
       <div class="header-tools">
+        <label id="lang-label" class="sr-only" for="lang-select" data-i18n="langLabel">Language</label>
+        <select id="lang-select" class="lang-select" aria-label="Language" data-i18n-aria="langLabel">
+          <!-- Options are populated from the i18n registry (see populateLanguageSelector) -->
+        </select>
         <button id="sound-btn" class="icon-btn" type="button" aria-pressed="true"
                 aria-label="Mute sound" aria-keyshortcuts="M" title="Mute (M)">
           <span id="sound-icon" aria-hidden="true">🔊</span>
@@ -622,42 +722,42 @@
     <main>
       <div class="play-area">
         <div class="board-container">
-          <div id="board" class="sudoku-board" role="grid" aria-label="Sudoku board"
+          <div id="board" class="sudoku-board" role="grid" aria-label="Sudoku board" data-i18n-aria="boardLabel"
                aria-rowcount="9" aria-colcount="9">
             <!-- Cells generated by JS -->
           </div>
         </div>
 
         <div class="sidebar">
-          <section class="info-panel" aria-label="Game information">
+          <section class="info-panel" aria-label="Game information" data-i18n-aria="gameInfo">
             <dl class="stats">
               <div class="stat">
-                <dt>Difficulty</dt>
+                <dt data-i18n="difficulty">Difficulty</dt>
                 <dd>
-                  <select id="difficulty" class="diff-select" aria-label="Difficulty level">
-                    <option value="easy">Easy</option>
-                    <option value="medium" selected>Medium</option>
-                    <option value="hard">Hard</option>
+                  <select id="difficulty" class="diff-select" aria-label="Difficulty level" data-i18n-aria="difficultyLevel">
+                    <option value="easy" data-i18n="easy">Easy</option>
+                    <option value="medium" selected data-i18n="medium">Medium</option>
+                    <option value="hard" data-i18n="hard">Hard</option>
                   </select>
                 </dd>
               </div>
               <div class="stat">
-                <dt>Time</dt>
-                <dd><span id="timer" class="tnum" role="timer" aria-label="Elapsed time">00:00</span></dd>
+                <dt data-i18n="time">Time</dt>
+                <dd><span id="timer" class="tnum" role="timer" aria-label="Elapsed time" data-i18n-aria="elapsedTime">00:00</span></dd>
               </div>
               <div class="stat">
-                <dt>Mistakes</dt>
+                <dt data-i18n="mistakes">Mistakes</dt>
                 <dd><span id="mistakes" class="tnum">0</span></dd>
               </div>
               <div class="stat">
-                <dt>Completion</dt>
+                <dt data-i18n="completion">Completion</dt>
                 <dd><span id="completion-pct" class="tnum">0%</span></dd>
               </div>
             </dl>
             <div class="progress-row">
               <div id="progressbar" class="progressbar" role="progressbar"
                    aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
-                   aria-valuetext="0 percent complete" aria-label="Completion progress">
+                   aria-valuetext="0 percent complete" aria-label="Completion progress" data-i18n-aria="completionProgress">
                 <div id="progress-fill" class="fill"></div>
               </div>
             </div>
@@ -665,27 +765,27 @@
 
           <div class="controls">
             <button id="pause-btn" class="action-btn" type="button" aria-pressed="false"
-                    aria-keyshortcuts="P">Pause</button>
-            <button id="new-game-btn" class="action-btn primary-action" type="button">New Game</button>
+                    aria-keyshortcuts="P" data-i18n="pause">Pause</button>
+            <button id="new-game-btn" class="action-btn primary-action" type="button" data-i18n="newGame">New Game</button>
             <button id="undo-btn" class="action-btn" type="button" aria-label="Undo last action"
-                    aria-keyshortcuts="Control+Z Meta+Z">Undo</button>
+                    aria-keyshortcuts="Control+Z Meta+Z" data-i18n="undo" data-i18n-aria="undoAria">Undo</button>
             <button id="notes-btn" class="action-btn" type="button" aria-pressed="false"
-                    aria-label="Toggle notes mode" aria-keyshortcuts="N">Notes</button>
+                    aria-label="Toggle notes mode" aria-keyshortcuts="N" data-i18n="notes" data-i18n-aria="notesAria">Notes</button>
           </div>
 
           <div class="numpad-wrap">
-            <div class="numpad" role="group" aria-label="Number pad">
-              <button class="num-btn" type="button" data-digit="1" aria-label="Digit 1">1<span class="num-count" aria-hidden="true"></span></button>
-              <button class="num-btn" type="button" data-digit="2" aria-label="Digit 2">2<span class="num-count" aria-hidden="true"></span></button>
-              <button class="num-btn" type="button" data-digit="3" aria-label="Digit 3">3<span class="num-count" aria-hidden="true"></span></button>
-              <button class="num-btn" type="button" data-digit="4" aria-label="Digit 4">4<span class="num-count" aria-hidden="true"></span></button>
-              <button class="num-btn" type="button" data-digit="5" aria-label="Digit 5">5<span class="num-count" aria-hidden="true"></span></button>
-              <button class="num-btn" type="button" data-digit="6" aria-label="Digit 6">6<span class="num-count" aria-hidden="true"></span></button>
-              <button class="num-btn" type="button" data-digit="7" aria-label="Digit 7">7<span class="num-count" aria-hidden="true"></span></button>
-              <button class="num-btn" type="button" data-digit="8" aria-label="Digit 8">8<span class="num-count" aria-hidden="true"></span></button>
-              <button class="num-btn" type="button" data-digit="9" aria-label="Digit 9">9<span class="num-count" aria-hidden="true"></span></button>
+            <div class="numpad" role="group" aria-label="Number pad" data-i18n-aria="numberPad">
+              <button class="num-btn" type="button" data-digit="1" aria-label="Digit 1" data-i18n-aria="digit" data-i18n-arg="1"><span class="num-face">1</span><span class="num-count" aria-hidden="true"></span></button>
+              <button class="num-btn" type="button" data-digit="2" aria-label="Digit 2" data-i18n-aria="digit" data-i18n-arg="2"><span class="num-face">2</span><span class="num-count" aria-hidden="true"></span></button>
+              <button class="num-btn" type="button" data-digit="3" aria-label="Digit 3" data-i18n-aria="digit" data-i18n-arg="3"><span class="num-face">3</span><span class="num-count" aria-hidden="true"></span></button>
+              <button class="num-btn" type="button" data-digit="4" aria-label="Digit 4" data-i18n-aria="digit" data-i18n-arg="4"><span class="num-face">4</span><span class="num-count" aria-hidden="true"></span></button>
+              <button class="num-btn" type="button" data-digit="5" aria-label="Digit 5" data-i18n-aria="digit" data-i18n-arg="5"><span class="num-face">5</span><span class="num-count" aria-hidden="true"></span></button>
+              <button class="num-btn" type="button" data-digit="6" aria-label="Digit 6" data-i18n-aria="digit" data-i18n-arg="6"><span class="num-face">6</span><span class="num-count" aria-hidden="true"></span></button>
+              <button class="num-btn" type="button" data-digit="7" aria-label="Digit 7" data-i18n-aria="digit" data-i18n-arg="7"><span class="num-face">7</span><span class="num-count" aria-hidden="true"></span></button>
+              <button class="num-btn" type="button" data-digit="8" aria-label="Digit 8" data-i18n-aria="digit" data-i18n-arg="8"><span class="num-face">8</span><span class="num-count" aria-hidden="true"></span></button>
+              <button class="num-btn" type="button" data-digit="9" aria-label="Digit 9" data-i18n-aria="digit" data-i18n-arg="9"><span class="num-face">9</span><span class="num-count" aria-hidden="true"></span></button>
               <button id="erase-btn" class="action-btn" type="button" aria-label="Erase cell"
-                      aria-keyshortcuts="Backspace Delete">Erase</button>
+                      aria-keyshortcuts="Backspace Delete" data-i18n="erase" data-i18n-aria="eraseAria">Erase</button>
             </div>
           </div>
         </div>
@@ -693,15 +793,15 @@
 
       <div class="how-to-play">
         <details>
-          <summary><h2 style="display:inline;font-size:1rem;margin:0;">How to Play</h2></summary>
+          <summary><h2 style="display:inline;font-size:1rem;margin:0;" data-i18n="howToPlay">How to Play</h2></summary>
           <ul>
-            <li><strong>Select:</strong> Tap/click a cell or use <span class="kbd">Arrow</span> keys. <span class="kbd">Home</span>/<span class="kbd">End</span> jump to row start/end.</li>
-            <li><strong>Enter digit:</strong> Tap a pad button or press <span class="kbd">1</span>–<span class="kbd">9</span>.</li>
-            <li><strong>Erase:</strong> <span class="kbd">Backspace</span>, <span class="kbd">Delete</span>, or <span class="kbd">0</span>.</li>
-            <li><strong>Notes mode:</strong> <span class="kbd">N</span> toggles mode; <span class="kbd">Shift</span>+<span class="kbd">1</span>–<span class="kbd">9</span> toggles a single note without switching modes.</li>
-            <li><strong>Undo:</strong> <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span>+<span class="kbd">Z</span> (last 20 actions).</li>
-            <li><strong>Pause:</strong> <span class="kbd">P</span> or <span class="kbd">Esc</span>.</li>
-            <li><strong>Mute:</strong> <span class="kbd">M</span>.</li>
+            <li data-i18n="htpSelect" data-i18n-html="1"><strong>Select:</strong> Tap/click a cell or use <span class="kbd">Arrow</span> keys. <span class="kbd">Home</span>/<span class="kbd">End</span> jump to row start/end.</li>
+            <li data-i18n="htpEnter" data-i18n-html="1"><strong>Enter digit:</strong> Tap a pad button or press <span class="kbd">1</span>–<span class="kbd">9</span>.</li>
+            <li data-i18n="htpErase" data-i18n-html="1"><strong>Erase:</strong> <span class="kbd">Backspace</span>, <span class="kbd">Delete</span>, or <span class="kbd">0</span>.</li>
+            <li data-i18n="htpNotes" data-i18n-html="1"><strong>Notes mode:</strong> <span class="kbd">N</span> toggles mode; <span class="kbd">Shift</span>+<span class="kbd">1</span>–<span class="kbd">9</span> toggles a single note without switching modes.</li>
+            <li data-i18n="htpUndo" data-i18n-html="1"><strong>Undo:</strong> <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span>+<span class="kbd">Z</span> (last 20 actions).</li>
+            <li data-i18n="htpPause" data-i18n-html="1"><strong>Pause:</strong> <span class="kbd">P</span> or <span class="kbd">Esc</span>.</li>
+            <li data-i18n="htpMute" data-i18n-html="1"><strong>Mute:</strong> <span class="kbd">M</span>.</li>
           </ul>
         </details>
       </div>
@@ -709,22 +809,22 @@
   </div>
 
   <dialog id="completion-dialog" aria-labelledby="completion-heading">
-    <h2 id="completion-heading">Puzzle Solved! 🎉</h2>
+    <h2 id="completion-heading" data-i18n="solvedHeading">Puzzle Solved! 🎉</h2>
     <div class="completion-sheen" aria-hidden="true"></div>
-    <p>Time: <span id="completion-time" class="tnum">00:00</span></p>
-    <p>Difficulty: <span id="completion-difficulty">Medium</span></p>
-    <p>Mistakes: <span id="completion-mistakes" class="tnum">0</span></p>
+    <p><span data-i18n="timeLabel">Time:</span> <span id="completion-time" class="tnum">00:00</span></p>
+    <p><span data-i18n="difficultyLabel">Difficulty:</span> <span id="completion-difficulty">Medium</span></p>
+    <p><span data-i18n="mistakesLabel">Mistakes:</span> <span id="completion-mistakes" class="tnum">0</span></p>
     <div class="dialog-actions">
-      <button id="close-completion-btn" class="action-btn primary-action" type="button">New Game</button>
+      <button id="close-completion-btn" class="action-btn primary-action" type="button" data-i18n="newGame">New Game</button>
     </div>
   </dialog>
 
   <dialog id="confirmation-dialog" aria-labelledby="confirm-heading">
-    <h2 id="confirm-heading">Start New Game?</h2>
-    <p>There's an in-progress game. Starting a new game will discard the current board.</p>
+    <h2 id="confirm-heading" data-i18n="confirmHeading">Start New Game?</h2>
+    <p data-i18n="confirmBody">There's an in-progress game. Starting a new game will discard the current board.</p>
     <div class="confirm-actions">
-      <button id="cancel-new-game-btn" class="action-btn" type="button">Cancel</button>
-      <button id="confirm-new-game-btn" class="action-btn primary-action" type="button">New Game</button>
+      <button id="cancel-new-game-btn" class="action-btn" type="button" data-i18n="cancel">Cancel</button>
+      <button id="confirm-new-game-btn" class="action-btn primary-action" type="button" data-i18n="newGame">New Game</button>
     </div>
   </dialog>
 
@@ -747,7 +847,454 @@
     const STORAGE_KEY = 'sudoku-game-v1';
     const THEME_KEY = 'sudoku-theme';
     const MUTE_KEY = 'sudoku-muted';
+    const LANG_KEY = 'sudoku-lang';
     const MAX_HISTORY = 20;
+
+    /* ============================================================
+       Internationalization (i18n)
+       ------------------------------------------------------------
+       Currently shipped: English (en), Spanish (es), Quechua (qu),
+       Nahuatl (nah), Yucatec Maya (yua).
+       Quechua here is Southern Quechua / Runa Simi, the Indigenous
+       language of the Andes (Peru, Bolivia, Ecuador). Nahuatl and
+       Yucatec Maya are Indigenous languages of Mexico.
+
+       HOW TO ADD OR UPDATE A LANGUAGE (single place to edit):
+         1. Add one entry to the I18N object below, keyed by its
+            BCP-47 base code (e.g. 'nah' for Nahuatl, 'pt', 'fr').
+         2. Give it a `nativeName` (shown in the picker) and translate
+            every string key. Missing keys fall back to English.
+         3. That's it — SUPPORTED_LANGS, the language <select>, and
+            all UI/ARIA strings update automatically. No markup edits.
+
+       Each string may contain {placeholders} filled by t(key, params).
+       ============================================================ */
+    const I18N = {
+      en: {
+        nativeName: 'English',
+        langLabel: 'Language',
+        boardLabel: 'Sudoku board',
+        gameInfo: 'Game information',
+        difficulty: 'Difficulty',
+        difficultyLevel: 'Difficulty level',
+        easy: 'Easy', medium: 'Medium', hard: 'Hard',
+        time: 'Time',
+        elapsedTime: 'Elapsed time',
+        mistakes: 'Mistakes',
+        completion: 'Completion',
+        completionProgress: 'Completion progress',
+        pause: 'Pause', resume: 'Resume',
+        newGame: 'New Game',
+        undo: 'Undo', undoAria: 'Undo last action',
+        notes: 'Notes', notesAria: 'Toggle notes mode',
+        numberPad: 'Number pad',
+        digit: 'Digit {n}',
+        erase: 'Erase', eraseAria: 'Erase cell',
+        sound: 'Sound', muted: 'Muted',
+        muteSound: 'Mute sound', unmuteSound: 'Unmute sound', muteTitle: 'Mute (M)',
+        toggleTheme: 'Toggle theme',
+        themeSystem: 'System', themeLight: 'Light', themeDark: 'Dark',
+        themeLabel: 'Theme: {name} (click to change)',
+        howToPlay: 'How to Play',
+        htpSelect: '<strong>Select:</strong> Tap/click a cell or use <span class="kbd">Arrow</span> keys. <span class="kbd">Home</span>/<span class="kbd">End</span> jump to row start/end.',
+        htpEnter: '<strong>Enter digit:</strong> Tap a pad button or press <span class="kbd">1</span>–<span class="kbd">9</span>.',
+        htpErase: '<strong>Erase:</strong> <span class="kbd">Backspace</span>, <span class="kbd">Delete</span>, or <span class="kbd">0</span>.',
+        htpNotes: '<strong>Notes mode:</strong> <span class="kbd">N</span> toggles mode; <span class="kbd">Shift</span>+<span class="kbd">1</span>–<span class="kbd">9</span> toggles a single note without switching modes.',
+        htpUndo: '<strong>Undo:</strong> <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span>+<span class="kbd">Z</span> (last 20 actions).',
+        htpPause: '<strong>Pause:</strong> <span class="kbd">P</span> or <span class="kbd">Esc</span>.',
+        htpMute: '<strong>Mute:</strong> <span class="kbd">M</span>.',
+        solvedHeading: 'Puzzle Solved! 🎉',
+        timeLabel: 'Time:', difficultyLabel: 'Difficulty:', mistakesLabel: 'Mistakes:',
+        confirmHeading: 'Start New Game?',
+        confirmBody: "There's an in-progress game. Starting a new game will discard the current board.",
+        cancel: 'Cancel',
+        // dynamic / announcements
+        valuetext: '{pct} percent complete',
+        soundMuted: 'Sound muted', soundOn: 'Sound on',
+        notesModeOn: 'Notes mode on', notesModeOff: 'Notes mode off',
+        undidAction: 'Undid last action',
+        gamePaused: 'Game paused', gameResumed: 'Game resumed',
+        solvedAnnounce: 'Puzzle solved! Time {time}, {n} mistakes.',
+        completedOne: 'Completed {group}!',
+        completedMany: 'Completed {n} groups!',
+        groupRow: 'row', groupCol: 'column', groupBox: 'box',
+        // cell labels
+        cellBase: 'Row {r}, column {c}',
+        cellGiven: 'Row {r}, column {c}, given {v}',
+        cellValue: 'Row {r}, column {c}, {v}',
+        cellValueConflict: 'Row {r}, column {c}, {v}, conflict',
+        cellEmpty: 'Row {r}, column {c}, empty',
+        cellEmptyNotes: 'Row {r}, column {c}, empty, notes {notes}',
+        selGiven: 'Selected row {r}, column {c}, given {v}',
+        selValue: 'Selected row {r}, column {c}, value {v}',
+        selEmpty: 'Selected row {r}, column {c}, empty'
+      },
+      es: {
+        nativeName: 'Español',
+        langLabel: 'Idioma',
+        boardLabel: 'Tablero de Sudoku',
+        gameInfo: 'Información del juego',
+        difficulty: 'Dificultad',
+        difficultyLevel: 'Nivel de dificultad',
+        easy: 'Fácil', medium: 'Media', hard: 'Difícil',
+        time: 'Tiempo',
+        elapsedTime: 'Tiempo transcurrido',
+        mistakes: 'Errores',
+        completion: 'Progreso',
+        completionProgress: 'Progreso de finalización',
+        pause: 'Pausar', resume: 'Reanudar',
+        newGame: 'Nuevo juego',
+        undo: 'Deshacer', undoAria: 'Deshacer última acción',
+        notes: 'Notas', notesAria: 'Alternar modo de notas',
+        numberPad: 'Teclado numérico',
+        digit: 'Dígito {n}',
+        erase: 'Borrar', eraseAria: 'Borrar celda',
+        sound: 'Sonido', muted: 'Silenciado',
+        muteSound: 'Silenciar sonido', unmuteSound: 'Activar sonido', muteTitle: 'Silenciar (M)',
+        toggleTheme: 'Cambiar tema',
+        themeSystem: 'Sistema', themeLight: 'Claro', themeDark: 'Oscuro',
+        themeLabel: 'Tema: {name} (clic para cambiar)',
+        howToPlay: 'Cómo jugar',
+        htpSelect: '<strong>Seleccionar:</strong> Toca o haz clic en una celda o usa las teclas <span class="kbd">Flecha</span>. <span class="kbd">Inicio</span>/<span class="kbd">Fin</span> saltan al inicio/fin de la fila.',
+        htpEnter: '<strong>Introducir dígito:</strong> Toca un botón del teclado o pulsa <span class="kbd">1</span>–<span class="kbd">9</span>.',
+        htpErase: '<strong>Borrar:</strong> <span class="kbd">Retroceso</span>, <span class="kbd">Supr</span> o <span class="kbd">0</span>.',
+        htpNotes: '<strong>Modo notas:</strong> <span class="kbd">N</span> alterna el modo; <span class="kbd">Mayús</span>+<span class="kbd">1</span>–<span class="kbd">9</span> alterna una sola nota sin cambiar de modo.',
+        htpUndo: '<strong>Deshacer:</strong> <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span>+<span class="kbd">Z</span> (últimas 20 acciones).',
+        htpPause: '<strong>Pausar:</strong> <span class="kbd">P</span> o <span class="kbd">Esc</span>.',
+        htpMute: '<strong>Silenciar:</strong> <span class="kbd">M</span>.',
+        solvedHeading: '¡Sudoku resuelto! 🎉',
+        timeLabel: 'Tiempo:', difficultyLabel: 'Dificultad:', mistakesLabel: 'Errores:',
+        confirmHeading: '¿Empezar un juego nuevo?',
+        confirmBody: 'Hay un juego en curso. Empezar uno nuevo descartará el tablero actual.',
+        cancel: 'Cancelar',
+        valuetext: '{pct} por ciento completado',
+        soundMuted: 'Sonido silenciado', soundOn: 'Sonido activado',
+        notesModeOn: 'Modo notas activado', notesModeOff: 'Modo notas desactivado',
+        undidAction: 'Se deshizo la última acción',
+        gamePaused: 'Juego en pausa', gameResumed: 'Juego reanudado',
+        solvedAnnounce: '¡Sudoku resuelto! Tiempo {time}, {n} errores.',
+        completedOne: '¡{group} completada!',
+        completedMany: '¡{n} grupos completados!',
+        groupRow: 'fila', groupCol: 'columna', groupBox: 'región',
+        cellBase: 'Fila {r}, columna {c}',
+        cellGiven: 'Fila {r}, columna {c}, fija {v}',
+        cellValue: 'Fila {r}, columna {c}, {v}',
+        cellValueConflict: 'Fila {r}, columna {c}, {v}, conflicto',
+        cellEmpty: 'Fila {r}, columna {c}, vacía',
+        cellEmptyNotes: 'Fila {r}, columna {c}, vacía, notas {notes}',
+        selGiven: 'Seleccionada fila {r}, columna {c}, fija {v}',
+        selValue: 'Seleccionada fila {r}, columna {c}, valor {v}',
+        selEmpty: 'Seleccionada fila {r}, columna {c}, vacía'
+      },
+      qu: {
+        nativeName: 'Runa Simi (Quechua)',
+        // Quechua number words (for screen readers); grid keeps Western digits
+        // because Quechua (Inca quipu) had no compact written 1-9 glyph.
+        numberWords: ['huk','iskay','kimsa','tawa','pichqa','suqta','qanchis','pusaq','isqun'],
+        langLabel: 'Rimay',
+        boardLabel: 'Sudoku pukllana pampa',
+        gameInfo: 'Pukllay willakuy',
+        difficulty: 'Sasachay',
+        difficultyLevel: 'Sasachay patma',
+        easy: 'Facil', medium: 'Chawpi', hard: 'Sasa',
+        time: 'Pacha',
+        elapsedTime: 'Puriq pacha',
+        mistakes: 'Pantaykuna',
+        completion: 'Tukusqa',
+        completionProgress: 'Tukusqamanta puriynin',
+        pause: 'Sayachiy', resume: 'Kutichiy',
+        newGame: 'Musuq pukllay',
+        undo: 'Kutichiy', undoAria: 'Qhipa ruwayta kutichiy',
+        notes: 'Qillqakuna', notesAria: 'Qillqa modota tikray',
+        numberPad: 'Yupay teclado',
+        digit: '{n} yupay',
+        erase: 'Pichay', eraseAria: 'Chiqapta pichay',
+        sound: 'Uyarina', muted: 'Chʼinyachisqa',
+        muteSound: 'Uyarinata chʼinyachiy', unmuteSound: 'Uyarinata kichay', muteTitle: 'Chʼinyachiy (M)',
+        toggleTheme: 'Rikchʼayta tikray',
+        themeSystem: 'Sistema', themeLight: 'Kʼanchay', themeDark: 'Lʼaqa',
+        themeLabel: 'Rikchʼay: {name} (tikranapaq ñitʼiy)',
+        howToPlay: 'Imaynatas pukllana',
+        htpSelect: '<strong>Akllay:</strong> Chiqapta llamiy icha ñitʼiy, utaq <span class="kbd">Wachʼi</span> teclakunata apaykachay. <span class="kbd">Qallariy</span>/<span class="kbd">Tukuy</span> siqi qallariyman/tukuyman pʼitanku.',
+        htpEnter: '<strong>Yupayta churay:</strong> Teclado botonta llamiy icha <span class="kbd">1</span>–<span class="kbd">9</span> ñitʼiy.',
+        htpErase: '<strong>Pichay:</strong> <span class="kbd">Backspace</span>, <span class="kbd">Delete</span>, utaq <span class="kbd">0</span>.',
+        htpNotes: '<strong>Qillqa modo:</strong> <span class="kbd">N</span> modota tikran; <span class="kbd">Shift</span>+<span class="kbd">1</span>–<span class="kbd">9</span> huk qillqallata tikran mana modota tikraspa.',
+        htpUndo: '<strong>Kutichiy:</strong> <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span>+<span class="kbd">Z</span> (qhipa 20 ruwaykuna).',
+        htpPause: '<strong>Sayachiy:</strong> <span class="kbd">P</span> utaq <span class="kbd">Esc</span>.',
+        htpMute: '<strong>Chʼinyachiy:</strong> <span class="kbd">M</span>.',
+        solvedHeading: '¡Sudoku allichasqa! 🎉',
+        timeLabel: 'Pacha:', difficultyLabel: 'Sasachay:', mistakesLabel: 'Pantaykuna:',
+        confirmHeading: '¿Musuq pukllayta qallarichkanki?',
+        confirmBody: 'Huk pukllay puririchkan. Musuqta qallarispaqa kunan pampata wischunqa.',
+        cancel: 'Saqiy',
+        valuetext: '{pct} pachak tukusqa',
+        soundMuted: 'Uyarina chʼinyachisqa', soundOn: 'Uyarina kichasqa',
+        notesModeOn: 'Qillqa modo kichasqa', notesModeOff: 'Qillqa modo wichʼqasqa',
+        undidAction: 'Qhipa ruway kutichisqa',
+        gamePaused: 'Pukllay sayachisqa', gameResumed: 'Pukllay kutichisqa',
+        solvedAnnounce: '¡Sudoku allichasqa! Pacha {time}, {n} pantaykuna.',
+        completedOne: '¡{group} tukusqa!',
+        completedMany: '¡{n} huñukuna tukusqa!',
+        groupRow: 'siqi', groupCol: 'sayaq', groupBox: 'wasi',
+        cellBase: 'Siqi {r}, sayaq {c}',
+        cellGiven: 'Siqi {r}, sayaq {c}, qusqa {v}',
+        cellValue: 'Siqi {r}, sayaq {c}, {v}',
+        cellValueConflict: 'Siqi {r}, sayaq {c}, {v}, chʼaqwa',
+        cellEmpty: 'Siqi {r}, sayaq {c}, chʼusaq',
+        cellEmptyNotes: 'Siqi {r}, sayaq {c}, chʼusaq, qillqakuna {notes}',
+        selGiven: 'Akllasqa siqi {r}, sayaq {c}, qusqa {v}',
+        selValue: 'Akllasqa siqi {r}, sayaq {c}, chanin {v}',
+        selEmpty: 'Akllasqa siqi {r}, sayaq {c}, chʼusaq'
+      },
+      nah: {
+        // Nahuatl (Central) — Mexican Indigenous language. Numbers kept as digits.
+        nativeName: 'Nāhuatl',
+        // Nahuatl number words (for screen readers); grid keeps Western digits
+        // because Nahuatl used base-20 pictographs, not compact 1-9 glyphs.
+        numberWords: ['cē','ōme','ēyi','nāhui','mācuīlli','chicuacē','chicōme','chicuēyi','chiucnāhui'],
+        langLabel: 'Tlahtōlli',
+        boardLabel: 'Sudoku tlapechtli',
+        gameInfo: 'Māhuiltiliztli tlahtōlli',
+        difficulty: 'Ohuihcāyōtl',
+        difficultyLevel: 'Ohuihcāyōtl tlanāhuatīlli',
+        easy: 'Amo ohuih', medium: 'Tlahcoyān', hard: 'Ohuih',
+        time: 'Cāhuitl',
+        elapsedTime: 'Panōc cāhuitl',
+        mistakes: 'Tlahtlacōlli',
+        completion: 'Tzonquīzaliztli',
+        completionProgress: 'Tzonquīzaliztli ohtli',
+        pause: 'Xitlacāhua', resume: 'Xicsēncāhua',
+        newGame: 'Yancuic māhuiltiliztli',
+        undo: 'Xiccuepa', undoAria: 'Xiccuepa in tlā ōticchīuh',
+        notes: 'Tlahcuilōlli', notesAria: 'Xicpatla tlahcuilōlli',
+        numberPad: 'Tlapōhualli tēcpantli',
+        digit: 'Tlapōhualli {n}',
+        erase: 'Xicpohpōhua', eraseAria: 'Xicpohpōhua tlapechtli',
+        sound: 'Caquiztli', muted: 'Tzicuīnīlli',
+        muteSound: 'Xictzicuīni caquiztli', unmuteSound: 'Xictlapo caquiztli', muteTitle: 'Xictzicuīni (M)',
+        toggleTheme: 'Xicpatla tlachiyaliztli',
+        themeSystem: 'Yōllōtl', themeLight: 'Tlanēxtli', themeDark: 'Tlayohualli',
+        themeLabel: 'Tlachiyaliztli: {name} (xictēmo tleh ic ticpatlāz)',
+        howToPlay: 'Quēnin māhuiltīlo',
+        htpSelect: '<strong>Xicpehpena:</strong> Xicmātoca celohtli nozo xictequitilti <span class="kbd">Mitl</span> teclahtin. <span class="kbd">Pēhualōyān</span>/<span class="kbd">Tlamiyān</span> huih tlahcuilōlpan pēhualōyān/tlamiyān.',
+        htpEnter: '<strong>Xictlāli tlapōhualli:</strong> Xicmātoca cē botōn nozo xictequitilti <span class="kbd">1</span>–<span class="kbd">9</span>.',
+        htpErase: '<strong>Xicpohpōhua:</strong> <span class="kbd">Backspace</span>, <span class="kbd">Delete</span>, nozo <span class="kbd">0</span>.',
+        htpNotes: '<strong>Tlahcuilōlli modo:</strong> <span class="kbd">N</span> quipatla modo; <span class="kbd">Shift</span>+<span class="kbd">1</span>–<span class="kbd">9</span> quipatla cē tlahcuilōlli ahmo quipatla modo.',
+        htpUndo: '<strong>Xiccuepa:</strong> <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span>+<span class="kbd">Z</span> (tlatzaccān 20 tlachīhualli).',
+        htpPause: '<strong>Xitlacāhua:</strong> <span class="kbd">P</span> nozo <span class="kbd">Esc</span>.',
+        htpMute: '<strong>Xictzicuīni:</strong> <span class="kbd">M</span>.',
+        solvedHeading: '¡Ōmopòpōuh in Sudoku! 🎉',
+        timeLabel: 'Cāhuitl:', difficultyLabel: 'Ohuihcāyōtl:', mistakesLabel: 'Tlahtlacōlli:',
+        confirmHeading: '¿Ticpēhualtīz yancuic māhuiltiliztli?',
+        confirmBody: 'Oncah cē māhuiltiliztli in ye tlàtlani. Intlā ticpēhualtīz yancuic, in āxcān tlapechtli motlāzaz.',
+        cancel: 'Xicāhua',
+        valuetext: '{pct} ic mahtlāctli tzonquīzqui',
+        soundMuted: 'Caquiztli ōtzicuīnīlōc', soundOn: 'Caquiztli ōtlapōlōc',
+        notesModeOn: 'Tlahcuilōlli modo ōtlapōlōc', notesModeOff: 'Tlahcuilōlli modo ōtzauhc',
+        undidAction: 'Ōmocuep in tlatzaccān tlachīhualli',
+        gamePaused: 'Māhuiltiliztli ōtlacāhualōc', gameResumed: 'Māhuiltiliztli ōmosēncāuh',
+        solvedAnnounce: '¡Ōmopòpōuh in Sudoku! Cāhuitl {time}, {n} tlahtlacōlli.',
+        completedOne: '¡Ōtzonquīz {group}!',
+        completedMany: '¡{n} tlatlamantli ōtzonquīzqueh!',
+        groupRow: 'tlahcuilōlli', groupCol: 'motēcac', groupBox: 'calli',
+        cellBase: 'Tlahcuilōlli {r}, motēcac {c}',
+        cellGiven: 'Tlahcuilōlli {r}, motēcac {c}, tlamactli {v}',
+        cellValue: 'Tlahcuilōlli {r}, motēcac {c}, {v}',
+        cellValueConflict: 'Tlahcuilōlli {r}, motēcac {c}, {v}, tlahtlacōlli',
+        cellEmpty: 'Tlahcuilōlli {r}, motēcac {c}, cactōc',
+        cellEmptyNotes: 'Tlahcuilōlli {r}, motēcac {c}, cactōc, tlahcuilōlli {notes}',
+        selGiven: 'Ōmopehpen tlahcuilōlli {r}, motēcac {c}, tlamactli {v}',
+        selValue: 'Ōmopehpen tlahcuilōlli {r}, motēcac {c}, ipati {v}',
+        selEmpty: 'Ōmopehpen tlahcuilōlli {r}, motēcac {c}, cactōc'
+      },
+      yua: {
+        // Yucatec Maya (Màaya tʼàan) — Mexican Indigenous language.
+        nativeName: 'Màaya tʼàan',
+        // Maya has a genuine written numeral system (dot-and-bar), drawn in CSS.
+        numeralType: 'maya',
+        numberWords: ['jun','kaʼ','óox','kan','jóoʼ','wak','uk','waxak','bolon'],
+        langLabel: 'Tʼàan',
+        boardLabel: 'Sudoku tabla',
+        gameInfo: 'Baʼaxoʼob tiʼ le baʼaxalaʼ',
+        difficulty: 'Talamil',
+        difficultyLevel: 'Uláakʼ talamil',
+        easy: 'Chʼaʼabil', medium: 'Chúumuk', hard: 'Talam',
+        time: 'Súutukil',
+        elapsedTime: 'Súutukil máanaʼan',
+        mistakes: 'Siʼipiloʼob',
+        completion: 'Chúukbesaj',
+        completionProgress: 'U bin u chúukbesaj',
+        pause: 'Weʼen', resume: 'Kaʼa káaj',
+        newGame: 'Túumben baʼaxal',
+        undo: 'Suʼut', undoAria: 'Suʼut le tsʼoʼok a beetikoʼ',
+        notes: 'Tsʼíiboʼob', notesAria: 'Kʼex u modo tsʼíiboʼob',
+        numberPad: 'U teclado xíimbaloʼob',
+        digit: 'Xíimbal {n}',
+        erase: 'Choʼ', eraseAria: 'Choʼ le kʼáanaʼ',
+        sound: 'Juum', muted: 'Chʼenkʼ',
+        muteSound: 'Chʼenkʼunt le juumaʼ', unmuteSound: 'Jeʼ le juumaʼ', muteTitle: 'Chʼenkʼunt (M)',
+        toggleTheme: 'Kʼex u náayil',
+        themeSystem: 'Sistema', themeLight: 'Sáasil', themeDark: 'Éekʼjochʼeʼen',
+        themeLabel: 'Náayil: {name} (chʼaʼ utiaʼal a kʼexik)',
+        howToPlay: 'Bix u baʼataʼal',
+        htpSelect: '<strong>Yéey:</strong> Machʼ wa chʼaʼ junpʼéel kʼáan wa meyaj le <span class="kbd">Flecha</span> teclaoʼob. <span class="kbd">Káajbal</span>/<span class="kbd">Tsʼook</span> ku bin tiʼ u káajbal/u tsʼook le tsʼíibaʼ.',
+        htpEnter: '<strong>Tsʼáa xíimbal:</strong> Machʼ junpʼéel botón wa pʼuʼuch <span class="kbd">1</span>–<span class="kbd">9</span>.',
+        htpErase: '<strong>Choʼ:</strong> <span class="kbd">Backspace</span>, <span class="kbd">Delete</span>, wa <span class="kbd">0</span>.',
+        htpNotes: '<strong>Modo tsʼíiboʼob:</strong> <span class="kbd">N</span> ku kʼexik le modoʼ; <span class="kbd">Shift</span>+<span class="kbd">1</span>–<span class="kbd">9</span> ku kʼexik junpʼéel tsʼíib maʼ tu kʼexik le modoʼ.',
+        htpUndo: '<strong>Suʼut:</strong> <span class="kbd">Ctrl</span>/<span class="kbd">Cmd</span>+<span class="kbd">Z</span> (u tsʼook 20 beetaʼanoʼob).',
+        htpPause: '<strong>Weʼen:</strong> <span class="kbd">P</span> wa <span class="kbd">Esc</span>.',
+        htpMute: '<strong>Chʼenkʼunt:</strong> <span class="kbd">M</span>.',
+        solvedHeading: '¡Tsʼoʼok u jóoʼsaʼal le Sudokuoʼ! 🎉',
+        timeLabel: 'Súutukil:', difficultyLabel: 'Talamil:', mistakesLabel: 'Siʼipiloʼob:',
+        confirmHeading: '¿Jeʼel a káajsik junpʼéel túumben baʼaxal?',
+        confirmBody: 'Yaan junpʼéel baʼaxal táan u beetaʼal. Wa ka káajsik túumben, le tabla bejlaʼeʼ yaan u saʼatal.',
+        cancel: 'Xuʼul',
+        valuetext: '{pct} tiʼ cien tsʼoʼoksaj',
+        soundMuted: 'Juum chʼenkʼuntaʼan', soundOn: 'Juum jeʼaʼan',
+        notesModeOn: 'Modo tsʼíiboʼob jeʼaʼan', notesModeOff: 'Modo tsʼíiboʼob kʼalaʼan',
+        undidAction: 'Suʼutaʼab le tsʼook beetaʼanoʼ',
+        gamePaused: 'Baʼaxal weʼenaʼan', gameResumed: 'Baʼaxal kaʼa káajaʼan',
+        solvedAnnounce: '¡Tsʼoʼok u jóoʼsaʼal le Sudokuoʼ! Súutukil {time}, {n} siʼipiloʼob.',
+        completedOne: '¡Tsʼoʼok {group}!',
+        completedMany: '¡{n} múuchʼoʼob tsʼoʼokoʼob!',
+        groupRow: 'tsʼíib', groupCol: 'waʼakunaj', groupBox: 'naj',
+        cellBase: 'Tsʼíib {r}, waʼakunaj {c}',
+        cellGiven: 'Tsʼíib {r}, waʼakunaj {c}, tsʼaʼan {v}',
+        cellValue: 'Tsʼíib {r}, waʼakunaj {c}, {v}',
+        cellValueConflict: 'Tsʼíib {r}, waʼakunaj {c}, {v}, siʼipil',
+        cellEmpty: 'Tsʼíib {r}, waʼakunaj {c}, mix baʼal',
+        cellEmptyNotes: 'Tsʼíib {r}, waʼakunaj {c}, mix baʼal, tsʼíiboʼob {notes}',
+        selGiven: 'Yéeyaʼab tsʼíib {r}, waʼakunaj {c}, tsʼaʼan {v}',
+        selValue: 'Yéeyaʼab tsʼíib {r}, waʼakunaj {c}, u tojol {v}',
+        selEmpty: 'Yéeyaʼab tsʼíib {r}, waʼakunaj {c}, mix baʼal'
+      }
+    };
+
+    // Supported languages are derived from the catalog — add a language by
+    // adding an entry to I18N above; nothing else needs to change here.
+    const SUPPORTED_LANGS = Object.keys(I18N);
+
+    let currentLang = 'en';
+
+    // Build the language <select> options from the registry (uses nativeName).
+    function populateLanguageSelector() {
+      const sel = document.getElementById('lang-select');
+      if (!sel) return;
+      sel.innerHTML = '';
+      SUPPORTED_LANGS.forEach(code => {
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = I18N[code].nativeName || code;
+        opt.setAttribute('lang', code);
+        sel.appendChild(opt);
+      });
+    }
+
+    function detectLang() {
+      let saved = null;
+      try { saved = localStorage.getItem(LANG_KEY); } catch (e) {}
+      if (saved && SUPPORTED_LANGS.includes(saved)) return saved;
+      const nav = (navigator.languages || [navigator.language || 'en']);
+      for (const l of nav) {
+        const base = String(l).toLowerCase().split('-')[0];
+        if (SUPPORTED_LANGS.includes(base)) return base;
+      }
+      return 'en';
+    }
+
+    // Translate key with {placeholder} substitution; falls back to English then key.
+    function t(key, params) {
+      const table = I18N[currentLang] || I18N.en;
+      let str = (key in table) ? table[key] : (key in I18N.en ? I18N.en[key] : key);
+      if (params) {
+        str = str.replace(/\{(\w+)\}/g, (m, name) =>
+          (params[name] !== undefined ? String(params[name]) : m));
+      }
+      return str;
+    }
+
+    /* ---- Numerals -------------------------------------------------------
+       The puzzle logic always uses the integers 1-9 (state.board etc.).
+       These helpers only affect how a digit is DISPLAYED/SPOKEN per language.
+       - Maya (yua): authentic dot-and-bar numerals, drawn as DOM (buildMayaNumeral).
+       - Others: Western digit shown; aboriginal number WORD used for ARIA.
+    --------------------------------------------------------------------- */
+    function numeralType(lang) {
+      return (I18N[lang || currentLang] || {}).numeralType || 'western';
+    }
+    // Spoken/label form of a digit for the current language (number word if available).
+    function numberWord(n) {
+      const words = (I18N[currentLang] || {}).numberWords;
+      return (words && words[n - 1]) ? words[n - 1] : String(n);
+    }
+    // Build a Maya numeral (1-9) as DOM: a row of dots (1-4) over bars (each = 5).
+    function buildMayaNumeral(n) {
+      const wrap = document.createElement('span');
+      wrap.className = 'maya-num';
+      wrap.setAttribute('aria-hidden', 'true');
+      const bars = Math.floor(n / 5);
+      const dots = n % 5;
+      const dotRow = document.createElement('span');
+      dotRow.className = 'maya-dots';
+      for (let d = 0; d < dots; d++) {
+        const dot = document.createElement('span');
+        dot.className = 'maya-dot';
+        dotRow.appendChild(dot);
+      }
+      const barStack = document.createElement('span');
+      barStack.className = 'maya-bars';
+      for (let b = 0; b < bars; b++) {
+        const bar = document.createElement('span');
+        bar.className = 'maya-bar';
+        barStack.appendChild(bar);
+      }
+      wrap.appendChild(dotRow);
+      wrap.appendChild(barStack);
+      return wrap;
+    }
+    // Render digit n into element el using the current language's numeral system.
+    function renderNumeral(el, n) {
+      el.textContent = '';
+      if (numeralType() === 'maya') el.appendChild(buildMayaNumeral(n));
+      else el.textContent = String(n);
+    }
+
+    function applyLanguage(lang) {
+      if (!SUPPORTED_LANGS.includes(lang)) lang = 'en';
+      currentLang = lang;
+      document.documentElement.setAttribute('lang', lang);
+      try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+
+      // Static text content
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (el.hasAttribute('data-i18n-html')) el.innerHTML = t(key);
+        else el.textContent = t(key);
+      });
+      // Static ARIA / attribute labels
+      document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+        const key = el.getAttribute('data-i18n-aria');
+        const arg = el.getAttribute('data-i18n-arg');
+        if (key === 'digit' && arg) {
+          // Speak the digit using the language's number word (e.g. Maya "jóoʼ").
+          el.setAttribute('aria-label', t('digit', { n: numberWord(parseInt(arg, 10)) }));
+        } else {
+          el.setAttribute('aria-label', arg ? t(key, { n: arg }) : t(key));
+        }
+      });
+
+      // Sync the selector value
+      const sel = document.getElementById('lang-select');
+      if (sel) sel.value = lang;
+
+      // Re-render dynamic UI that depends on language (incl. numeral system)
+      if (state.cellEls && state.cellEls.length) renderCells();
+      updateDigitCounts();
+      updateUI();
+      updateSoundButton();
+      refreshThemeButton();
+      updateInfoPanel();
+    }
 
     const prefersReducedMotion = () =>
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -922,17 +1469,23 @@
        ============================================================ */
     const THEME_ORDER = ['system', 'light', 'dark'];
     const THEME_META = {
-      system: { icon: '🖥️', text: 'System' },
-      light:  { icon: '☀️', text: 'Light' },
-      dark:   { icon: '🌙', text: 'Dark' }
+      system: { icon: '🖥️', key: 'themeSystem' },
+      light:  { icon: '☀️', key: 'themeLight' },
+      dark:   { icon: '🌙', key: 'themeDark' }
     };
     function applyTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
-      const meta = THEME_META[theme];
-      themeIcon.textContent = meta.icon;
-      themeText.textContent = meta.text;
-      themeBtn.setAttribute('aria-label', 'Theme: ' + meta.text + ' (click to change)');
+      refreshThemeButton();
       try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+    }
+    function refreshThemeButton() {
+      const theme = document.documentElement.getAttribute('data-theme') || 'system';
+      const meta = THEME_META[theme] || THEME_META.system;
+      const name = t(meta.key);
+      themeIcon.textContent = meta.icon;
+      themeText.textContent = name;
+      themeBtn.setAttribute('aria-label', t('themeLabel', { name }));
+      themeBtn.setAttribute('title', t('toggleTheme'));
     }
     function cycleTheme() {
       const current = document.documentElement.getAttribute('data-theme') || 'system';
@@ -956,15 +1509,16 @@
       const muted = Sound.isMuted();
       soundBtn.setAttribute('aria-pressed', String(!muted));
       soundIcon.textContent = muted ? '🔇' : '🔊';
-      soundText.textContent = muted ? 'Muted' : 'Sound';
-      soundBtn.setAttribute('aria-label', muted ? 'Unmute sound' : 'Mute sound');
+      soundText.textContent = muted ? t('muted') : t('sound');
+      soundBtn.setAttribute('aria-label', muted ? t('unmuteSound') : t('muteSound'));
+      soundBtn.setAttribute('title', t('muteTitle'));
     }
     function toggleMute() {
       const next = !Sound.isMuted();
       Sound.setMuted(next);
       try { localStorage.setItem(MUTE_KEY, next ? '1' : '0'); } catch (e) {}
       updateSoundButton();
-      announce(next ? 'Sound muted' : 'Sound on');
+      announce(next ? t('soundMuted') : t('soundOn'));
     }
 
     // --- Sudoku Generator (preserved) ---
@@ -1149,7 +1703,7 @@
       state.suppressAnim = false;
       updateDigitCounts();
       updateInfoPanel();
-      announce('Undid last action');
+      announce(t('undidAction'));
     }
 
     function placeDigit(digit) {
@@ -1237,7 +1791,7 @@
       if (anyDialogOpen()) return;
       state.notesMode = !state.notesMode;
       updateUI();
-      announce(state.notesMode ? 'Notes mode on' : 'Notes mode off');
+      announce(state.notesMode ? t('notesModeOn') : t('notesModeOff'));
     }
 
     // --- Conflicts (preserved logic + peer tracking) ---
@@ -1328,11 +1882,11 @@
 
     function showCompletion() {
       completionTimeEl.textContent = formatTime(state.timer);
-      completionDiffEl.textContent = state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1);
+      completionDiffEl.textContent = t(state.difficulty); // 'easy'|'medium'|'hard' -> localized
       completionMistakesEl.textContent = state.mistakes;
       Sound.win();
       if (!completionDialog.open) completionDialog.showModal();
-      announce('Puzzle solved! Time ' + formatTime(state.timer) + ', ' + state.mistakes + ' mistakes.');
+      announce(t('solvedAnnounce', { time: formatTime(state.timer), n: state.mistakes }));
     }
 
     // --- Persistence (mistakes + time included) ---
@@ -1423,11 +1977,11 @@
 
         if (isGiven) {
           cell.classList.add('given');
-          cell.textContent = value;
+          renderNumeral(cell, value);
           cell.setAttribute('aria-readonly', 'true');
         } else if (value !== 0) {
           cell.classList.add('player');
-          cell.textContent = value;
+          renderNumeral(cell, value);
           cell.removeAttribute('aria-readonly');
         } else if (state.notes[i].size > 0) {
           const grid = document.createElement('div');
@@ -1435,7 +1989,7 @@
           for (let n = 1; n <= 9; n++) {
             const nEl = document.createElement('div');
             nEl.className = 'note';
-            nEl.textContent = state.notes[i].has(n) ? n : '';
+            if (state.notes[i].has(n)) renderNumeral(nEl, n);
             grid.appendChild(nEl);
           }
           cell.appendChild(grid);
@@ -1465,14 +2019,12 @@
 
     function cellLabel(i, value, isGiven, hasConflict) {
       const row = Math.floor(i/9), col = i % 9;
-      let name = `Row ${row+1}, column ${col+1}`;
-      if (isGiven) name += `, given ${value}`;
-      else if (value !== 0) { name += `, ${value}`; if (hasConflict) name += ', conflict'; }
-      else {
-        name += ', empty';
-        if (state.notes[i].size > 0) name += `, notes ${Array.from(state.notes[i]).sort().join(' ')}`;
-      }
-      return name;
+      const r = row + 1, c = col + 1;
+      if (isGiven) return t('cellGiven', { r, c, v: numberWord(value) });
+      if (value !== 0) return t(hasConflict ? 'cellValueConflict' : 'cellValue', { r, c, v: numberWord(value) });
+      if (state.notes[i].size > 0)
+        return t('cellEmptyNotes', { r, c, notes: Array.from(state.notes[i]).sort().map(numberWord).join(' ') });
+      return t('cellEmpty', { r, c });
     }
 
     function selectCell(index) {
@@ -1481,23 +2033,25 @@
       renderCells();
       animateSelection(index);
       const cell = state.board[index];
-      const row = Math.floor(index/9), col = index % 9;
-      if (state.givens[index]) announce(`Selected row ${row+1}, column ${col+1}, given ${cell}`);
-      else if (cell !== 0) announce(`Selected row ${row+1}, column ${col+1}, value ${cell}`);
-      else announce(`Selected row ${row+1}, column ${col+1}, empty`);
+      const r = Math.floor(index/9) + 1, c = (index % 9) + 1;
+      if (state.givens[index]) announce(t('selGiven', { r, c, v: numberWord(cell) }));
+      else if (cell !== 0) announce(t('selValue', { r, c, v: numberWord(cell) }));
+      else announce(t('selEmpty', { r, c }));
     }
 
     function updateDigitCounts() {
       numpadBtns.forEach(btn => {
         const digit = parseInt(btn.dataset.digit, 10);
         const count = state.maxDigits[digit] || 0;
+        const face = btn.querySelector('.num-face');
+        if (face) renderNumeral(face, digit);
         btn.querySelector('.num-count').textContent = `${count}/9`;
         btn.disabled = count >= 9;
       });
     }
 
     function updateUI() {
-      pauseBtn.textContent = state.paused ? 'Resume' : 'Pause';
+      pauseBtn.textContent = state.paused ? t('resume') : t('pause');
       pauseBtn.setAttribute('aria-pressed', String(state.paused));
       notesBtn.setAttribute('aria-pressed', String(state.notesMode));
       difficultySelect.value = state.difficulty;
@@ -1518,7 +2072,7 @@
       completionPctEl.textContent = pct + '%';
       progressFillEl.style.width = pct + '%';
       progressbarEl.setAttribute('aria-valuenow', String(pct));
-      progressbarEl.setAttribute('aria-valuetext', pct + ' percent complete');
+      progressbarEl.setAttribute('aria-valuetext', t('valuetext', { pct }));
     }
 
     /* ============================================================
@@ -1607,9 +2161,14 @@
 
     function handleGroupCompletions(groups, originIdx) {
       Sound.groupComplete(Math.max(0, groups.length - 1));
-      // Announce politely
-      const names = groups.map(g => g.kind === 'box' ? 'box' : g.kind).join(' and ');
-      announce(`Completed ${groups.length > 1 ? groups.length + ' groups' : names}!`);
+      // Announce politely (localized)
+      if (groups.length > 1) {
+        announce(t('completedMany', { n: groups.length }));
+      } else {
+        const kind = groups[0].kind; // 'row' | 'col' | 'box'
+        const groupName = t(kind === 'row' ? 'groupRow' : kind === 'col' ? 'groupCol' : 'groupBox');
+        announce(t('completedOne', { group: groupName }));
+      }
       // Animate union of all newly completed cells once each, wave from origin
       const cells = new Set();
       groups.forEach(g => groupIndices(g.kind, g.n).forEach(i => cells.add(i)));
@@ -1762,8 +2321,8 @@
     }
     function handlePause() {
       if (anyDialogOpen()) return;
-      if (state.paused) { state.paused = false; startTimer(); announce('Game resumed'); }
-      else { state.paused = true; clearInterval(state.timerInterval); announce('Game paused'); }
+      if (state.paused) { state.paused = false; startTimer(); announce(t('gameResumed')); }
+      else { state.paused = true; clearInterval(state.timerInterval); announce(t('gamePaused')); }
       updateUI();
     }
     function handleDifficultyChange() {
@@ -1788,8 +2347,16 @@
         state.suppressAnim = false;
       }
 
+      // Build the language picker from the registry, then apply language
+      // after the board exists so dynamic strings re-render.
+      populateLanguageSelector();
+      applyLanguage(detectLang());
+
       document.addEventListener('keydown', handleKeyDown);
       boardEl.addEventListener('pointerdown', handleBoardPointer);
+
+      const langSelect = document.getElementById('lang-select');
+      langSelect.addEventListener('change', () => applyLanguage(langSelect.value));
 
       newGameBtn.addEventListener('click', handleNewGame);
       confirmNewGameBtn.addEventListener('click', handleConfirmNewGame);
