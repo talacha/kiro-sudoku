@@ -1,0 +1,51 @@
+%%{init: {"theme":"base", "themeVariables": {"background":"transparent", "fontFamily":"Arial"}, "flowchart": {"curve":"basis"}}}%%
+flowchart LR
+    %% ===== Nodes =====
+    User["fa:fa-user Viewer / Browser<br/>HTTPS request"]
+
+    subgraph AWS["AWS Cloud"]
+        direction LR
+
+        subgraph EDGE["Amazon CloudFront (Global Edge)"]
+            direction TB
+            CF["Amazon CloudFront<br/>Distribution<br/>E1NTX4DM59VX8F"]
+            OAC["Origin Access Control (OAC)<br/>SigV4 signing"]
+            CF --- OAC
+        end
+
+        subgraph REGION["Region: us-east-1"]
+            direction TB
+            S3["Amazon S3<br/>Private Bucket<br/>kiro-sudoku-xxxx"]
+            OBJ["sudoku.html<br/>(static web app)"]
+            POLICY["Bucket Policy<br/>Allow s3:GetObject<br/>only from this distribution"]
+            PAB["Public Access Block<br/>(all public access denied)"]
+            S3 --- OBJ
+            S3 -.enforced by.-> PAB
+            S3 -.governed by.-> POLICY
+        end
+    end
+
+    %% ===== Flows =====
+    User -->|"1 - HTTPS GET /"| CF
+    CF -->|"2 - signed origin request<br/>via OAC"| OAC
+    OAC -->|"3 - SigV4 GetObject"| S3
+    S3 -->|"4 - sudoku.html"| CF
+    CF -->|"5 - cached HTTPS response"| User
+
+    %% ===== AWS brand styling =====
+    classDef cfColor   fill:#8C4FFF,stroke:#5A2DA0,color:#ffffff;
+    classDef s3Color   fill:#569A31,stroke:#3B6B22,color:#ffffff;
+    classDef secColor  fill:#DD344C,stroke:#A3283A,color:#ffffff;
+    classDef objColor  fill:#1B660F,stroke:#0F3B08,color:#ffffff;
+    classDef userColor fill:#232F3E,stroke:#131A24,color:#ffffff;
+
+    class CF cfColor;
+    class S3 s3Color;
+    class OAC,POLICY,PAB secColor;
+    class OBJ objColor;
+    class User userColor;
+
+    %% ===== Transparent subgraph containers =====
+    style AWS    fill:transparent,stroke:#FF9900,stroke-width:2px,color:#FF9900;
+    style EDGE   fill:transparent,stroke:#8C4FFF,stroke-dasharray:4 3,color:#8C4FFF;
+    style REGION fill:transparent,stroke:#00A4A6,stroke-dasharray:4 3,color:#00A4A6;

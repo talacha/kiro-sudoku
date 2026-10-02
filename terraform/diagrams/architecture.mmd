@@ -1,0 +1,15 @@
+architecture-beta
+    group aws(logos:aws)[AWS Cloud]
+
+    service viewer(internet)[Viewer Browser]
+
+    group edge[Global Edge Network] in aws
+    service cf(logos:aws-cloudfront)[CloudFront Distribution] in edge
+    service oac(logos:aws-iam)[Origin Access Control OAC] in edge
+
+    group region[Region us east 1] in aws
+    service s3(logos:aws-s3)[Private S3 Bucket] in region
+
+    viewer:R --> L:cf
+    cf:R --> L:oac
+    oac:R --> L:s3
